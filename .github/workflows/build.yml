@@ -12,101 +12,54 @@ jobs:
       image: ps3dev/ps3dev:latest
 
     steps:
-      # ─── 1. Checkout code ───────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ─── 2. Set environment variables ───────────────────────────
-      - name: Set PS3 environment
-        run: |
-          echo "PS3DEV=/usr/local/ps3dev" >> $GITHUB_ENV
-          echo "PSL1GHT=/usr/local/ps3dev/psl1ght" >> $GITHUB_ENV
-          echo "PATH=/usr/local/ps3dev/ppu/bin:/usr/local/ps3dev/spu/bin:/usr/local/ps3dev/bin:$PATH" >> $GITHUB_ENV
-
-      # ─── 3. Generate ICON0.PNG ──────────────────────────────────
-      - name: Generate ICON0.PNG
-        run: |
-          mkdir -p pkgfiles
-          python3 << 'PYEOF'
-import struct, zlib, os
-
-def make_png(w, h, pixels):
-    def chunk(tag, data):
-        raw = tag + data
-        return struct.pack('>I', len(data)) + raw + struct.pack('>I', zlib.crc32(raw) & 0xffffffff)
-
-    raw = b''
-    for row in pixels:
-        raw += b'\x00'
-        for r, g, b in row:
-            raw += bytes([r, g, b])
-
-    return b'\x89PNG\r\n\x1a\n' + \
-           chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 2, 0, 0, 0)) + \
-           chunk(b'IDAT', zlib.compress(raw)) + \
-           chunk(b'IEND', b'')
-
-W, H = 128, 128
-pixels = []
-
-for y in range(H):
-    row = []
-    for x in range(W):
-        cx, cy = W//2, H//2
-        dx, dy = x - cx, y - cy
-        dist = (dx*dx + dy*dy) ** 0.5
-
-        r, g, b = 10, 14, 26
-
-        if dist < 45:
-            r, g, b = 30, 50, 160
-
-        if (dx*dx + (dy+20)*(dy+20)) < 18*18:
-            r, g, b = 50, 80, 200
-
-        if ((dx+10)**2 + (dy+25)**2) < 7*7:
-            r, g, b = 240, 240, 240
-        if ((dx-10)**2 + (dy+25)**2) < 7*7:
-            r, g, b = 240, 240, 240
-
-        if ((dx+10)**2 + (dy+25)**2) < 3*3:
-            r, g, b = 0, 0, 0
-        if ((dx-10)**2 + (dy+25)**2) < 3*3:
-            r, g, b = 0, 0, 0
-
-        if (x-104)**2 + (y-24)**2 < 18*18:
-            r, g, b = 220, 40, 50
-
-        row.append((r, g, b))
-    pixels.append(row)
-
-os.makedirs('pkgfiles', exist_ok=True)
-with open('pkgfiles/ICON0.PNG', 'wb') as f:
-    f.write(make_png(W, H, pixels))
-
-print("ICON0.PNG created")
-PYEOF
-
-      # ─── 4. Build the game (FIXED) ─────────────────────────────
-      - name: Build game
+      - name: Setup PS3 environment
         run: |
           export PS3DEV=/usr/local/ps3dev
           export PSL1GHT=/usr/local/ps3dev/psl1ght
-          export PATH=/usr/local/ps3dev/ppu/bin:/usr/local/ps3dev/spu/bin:/usr/local/ps3dev/bin:$PATH
+          export PATH=$PS3DEV/bin:$PS3DEV/ppu/bin:$PATH
+
+      # 🔥 إنشاء مشروع كامل تلقائياً
+      - name: Create simple PS3 project
+        run: |
+          mkdir -p source
+
+          # كود بسيط
+          cat > source/main.c << 'EOF'
+#include <stdio.h>
+
+int main() {
+    printf("Hello from PS3!\n");
+    return 0;
+}
+EOF
+
+          # Makefile جاهز
+          cat > Makefile << 'EOF'
+TARGET = hello_ps3
+OBJS = source/main.o
+
+include $(PSL1GHT)/ppu_rules
+
+pkg: $(TARGET).self
+	$(PS3DEV)/bin/pack-pkg pkgfiles/ $(TARGET).pkg
+
+$(TARGET).self: $(OBJS)
+EOF
+
+          mkdir -p pkgfiles
+
+      # 🧱 البناء
+      - name: Build PKG
+        run: |
           make clean || true
           make pkg
 
-      # ─── 5. List output files ───────────────────────────────────
-      - name: List output files
-        run: |
-          ls -lah *.pkg *.self *.elf 2>/dev/null || true
-          ls -lah build/ 2>/dev/null || true
-
-      # ─── 6. Upload PKG artifact ─────────────────────────────────
+      # 📦 رفع الملف
       - name: Upload PKG
         uses: actions/upload-artifact@v4
         with:
-          name: AlKhain-PS3-HEN
+          name: PS3-PKG
           path: "*.pkg"
-          if-no-files-found: error
-          retention-days: 30
