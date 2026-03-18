@@ -56,30 +56,24 @@ for y in range(H):
         dx, dy = x - cx, y - cy
         dist = (dx*dx + dy*dy) ** 0.5
 
-        # Background
         r, g, b = 10, 14, 26
 
-        # Body
         if dist < 45:
             r, g, b = 30, 50, 160
 
-        # Head
         if (dx*dx + (dy+20)*(dy+20)) < 18*18:
             r, g, b = 50, 80, 200
 
-        # Eyes
         if ((dx+10)**2 + (dy+25)**2) < 7*7:
             r, g, b = 240, 240, 240
         if ((dx-10)**2 + (dy+25)**2) < 7*7:
             r, g, b = 240, 240, 240
 
-        # Pupils
         if ((dx+10)**2 + (dy+25)**2) < 3*3:
             r, g, b = 0, 0, 0
         if ((dx-10)**2 + (dy+25)**2) < 3*3:
             r, g, b = 0, 0, 0
 
-        # Red dot
         if (x-104)**2 + (y-24)**2 < 18*18:
             r, g, b = 220, 40, 50
 
@@ -93,12 +87,13 @@ with open('pkgfiles/ICON0.PNG', 'wb') as f:
 print("ICON0.PNG created")
 PYEOF
 
-      # ─── 4. Build the game ──────────────────────────────────────
+      # ─── 4. Build the game (FIXED) ─────────────────────────────
       - name: Build game
         run: |
           export PS3DEV=/usr/local/ps3dev
           export PSL1GHT=/usr/local/ps3dev/psl1ght
           export PATH=/usr/local/ps3dev/ppu/bin:/usr/local/ps3dev/spu/bin:/usr/local/ps3dev/bin:$PATH
+          make clean || true
           make pkg
 
       # ─── 5. List output files ───────────────────────────────────
