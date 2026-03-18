@@ -28,9 +28,7 @@ jobs:
         run: |
           mkdir -p pkgfiles
           python3 << 'PYEOF'
-          import struct, zlib, os
-
-          def make_png(w, h, pixels):
+          import struct, zlib, osdef make_png(w, h, pixels):
               def chunk(tag, data):
                   raw = tag + data
                   return struct.pack('>I', len(data)) + raw + struct.pack('>I', zlib.crc32(raw) & 0xffffffff)
@@ -68,8 +66,7 @@ jobs:
                       r, g, b = 240, 240, 240
                   # Eye pupils
                   if ((dx+10)**2 + (dy+25)**2) < 3*3:
-                      r, g, b = 0, 0, 0
-                      if ((dx-10)**2 + (dy+25)**2) < 3*3:
+                      r, g, b = 0, 0, 0if ((dx-10)**2 + (dy+25)**2) < 3*3:
                       r, g, b = 0, 0, 0
                   # Red dot (impostor) - top right corner
                   if (x-104)**2 + (y-24)**2 < 18*18:
@@ -99,7 +96,6 @@ jobs:
       - name: Upload PKG
         uses: actions/upload-artifact@v4
         with:
-          name: AlKhain-PS3-HEN
-          path: "*.pkg"
+          name: AlKhain-PS3-HENpath: "*.pkg"
           if-no-files-found: error
           retention-days: 30
