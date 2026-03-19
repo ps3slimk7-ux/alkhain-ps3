@@ -22,20 +22,21 @@ jobs:
 
       - name: Setup PS3Dev Environment
         run: |
-          # Create toolchain directory
+          # Manually creating the directory and downloading the basic ruleset
           sudo mkdir -p /usr/local/ps3dev
           sudo chown -R $USER /usr/local/ps3dev
           
-          # Clone the toolchain scripts
-          git clone --depth 1 https://github.com/ps3dev/ps3toolchain.git
+          # Cloning the ps3dev repo to get the 'ppu_rules' and other essentials
+          git clone --depth 1 https://github.com/ps3dev/ps3dev.git ps3dev_files
+          cp -r ps3dev_files/* /usr/local/ps3dev/
           
-          # Set temporary path for the build process
+          # Setting the environment variables permanently for this job
           echo "PS3DEV=/usr/local/ps3dev" >> $GITHUB_ENV
           echo "PATH=/usr/local/ps3dev/bin:/usr/local/ps3dev/ppu/bin:/usr/local/ps3dev/spu/bin:$PATH" >> $GITHUB_ENV
 
       - name: Build project
         run: |
-          # Ensure the environment variables are active for this step
+          # Re-exporting for the current shell to ensure 'make' sees them
           export PS3DEV=/usr/local/ps3dev
           export PATH=$PS3DEV/bin:$PS3DEV/ppu/bin:$PS3DEV/spu/bin:$PATH
           
