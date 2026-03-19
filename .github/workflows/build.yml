@@ -12,29 +12,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           sudo apt update
           sudo apt install -y \
             build-essential git wget python3 \
-            libelf-dev pkg-config zlib1g-dev libncurses5-dev
+            libelf-dev pkg-config zlib1g-dev libncurses5-dev \
+            autoconf automake bison flex libtool patch
 
-      - name: Install Toolchain Binaries
+      - name: Setup PS3Dev Environment
         run: |
-          # Downloading from a stable, direct mirror to avoid 404/Auth issues
-          wget https://github.com/ps3dev/ps3toolchain/releases/download/v20220215/ps3dev-ubuntu-latest-20220215.tar.gz
-          sudo tar -xzf ps3dev-ubuntu-latest-20220215.tar.gz -C /
-          rm ps3dev-ubuntu-latest-20220215.tar.gz
-
-      - name: Set Environment
-        run: |
-          # Defining paths so the Makefile can find ppu_rules
+          # Create toolchain directory
+          sudo mkdir -p /usr/local/ps3dev
+          sudo chown -R $USER /usr/local/ps3dev
+          
+          # Clone the toolchain scripts
+          git clone --depth 1 https://github.com/ps3dev/ps3toolchain.git
+          
+          # Set temporary path for the build process
           echo "PS3DEV=/usr/local/ps3dev" >> $GITHUB_ENV
-          echo "PS3SDK=/usr/local/ps3dev/portlibs/ppu" >> $GITHUB_ENV
           echo "PATH=/usr/local/ps3dev/bin:/usr/local/ps3dev/ppu/bin:/usr/local/ps3dev/spu/bin:$PATH" >> $GITHUB_ENV
 
       - name: Build project
         run: |
+          # Ensure the environment variables are active for this step
+          export PS3DEV=/usr/local/ps3dev
+          export PATH=$PS3DEV/bin:$PS3DEV/ppu/bin:$PS3DEV/spu/bin:$PATH
+          
           if [ -f Makefile ]; then
             make
           else
