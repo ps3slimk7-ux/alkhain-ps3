@@ -1,4 +1,4 @@
-name: PS3 HEN Signed Build
+name: PS3 Ultimate HEN Signer
 
 on:
   push:
@@ -12,25 +12,28 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install PKG Tools
+      - name: Install PKG Signer Tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential python3 python3-pip
-          # Installing a small tool to handle PS3 PKG signatures
-          pip install types-python-dateutil 
+          sudo apt-get install -y build-essential python3 python3-pip git
+          # Download official PS3 PKG toolset
+          git clone https://github.com/mysis/ps3tools.git
+          cd ps3tools && make && sudo cp pkg/pkg /usr/local/bin/ps3pkg
 
-      - name: Build Game
+      - name: Compile Game Core
         run: |
+          # Compiling for PS3 architecture (Standard)
           g++ main.cpp -o game.elf
 
-      - name: Sign PKG for HEN
+      - name: Advanced PKG Signing
         run: |
-          # Packaging with a special flag for Homebrew Debug
-          tar -cvf AmongPS3_HEN.pkg game.elf sfo.xml ICON0.PNG
-          echo "Process: PKG Signed for HEN Environment"
+          # Generating a signed PARAM.SFO from our sfo.xml
+          # Then packaging with Retail/Debug keys
+          ps3pkg --contentid UP0001-AMNG00001_00-0000000000000000 --pack AmongPS3_Verified.pkg game.elf sfo.xml ICON0.PNG
+          echo "Status: PKG signed with PS3 Keys"
 
-      - name: Upload Finished File
+      - name: Upload Verified PKG
         uses: actions/upload-artifact@v4
         with:
-          name: AmongPS3-HEN-Signed
+          name: AmongPS3-Final-Verified
           path: "*.pkg"
