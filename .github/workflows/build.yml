@@ -15,7 +15,7 @@ jobs:
       - name: Install PS3 Toolchain
         run: |
           sudo apt update
-          sudo apt install -y wget git build-essential libelf-dev libssl-dev pkg-config
+          sudo apt install -y wget git build-essential libelf-dev libssl-dev pkg-config libtool
           git clone https://github.com/ps3dev/ps3toolchain.git
           cd ps3toolchain
           sudo ./toolchain.sh
