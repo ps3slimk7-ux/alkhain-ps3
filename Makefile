@@ -5,6 +5,14 @@ CONTENTID   := UP0001-$(APPID)_00-0000000000000000
 include $(PS3DEV)/ppu_rules
 
 TARGET      := game
+LIBS        := -lgcm_sys -lio TITLE       := Among PS3
+APPID       := AMNG00001
+CONTENTID   := UP0001-$(APPID)_00-0000000000000000
+
+# Standard paths for the toolchain we will download
+include $(PS3DEV)/ppu_rules
+
+TARGET      := game
 LIBS        := -lgcm_sys -lio -lsysutil -lrt -llv2 -lsysmodule -lm
 
 all: $(TARGET).pkg
@@ -20,3 +28,4 @@ $(TARGET).pkg: $(TARGET).elf PARAM.SFO
 
 clean:
 	rm -f *.o *.elf *.pkg PARAM.SFO
+ 
