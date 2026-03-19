@@ -9,31 +9,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Install PS3 Toolchain
-        run: |
-          sudo apt update
-          sudo apt install -y wget git build-essential libelf-dev libssl-dev pkg-config libtool
-          git clone https://github.com/ps3dev/ps3toolchain.git
-          cd ps3toolchain
-          sudo ./toolchain.sh
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          build-essential \
+          git \
+          python3 \
+          wget \
+          libelf-dev \
+          libtool \
+          autoconf \
+          automake \
+          pkg-config \
+          bison \
+          flex
 
-      - name: Build
-        run: |
-          export PATH=$PATH:/usr/local/ps3dev/bin
-          make
+    - name: Clone PS3 Toolchain
+      run: |
+        git clone https://github.com/ps3dev/ps3toolchain.git
 
-      - name: Create PKG
-        run: |
-          export PATH=$PATH:/usr/local/ps3dev/bin
-          make pkg
+    - name: Build Toolchain
+      run: |
+        cd ps3toolchain
+        sudo ./toolchain.sh
 
-      - name: Upload PKG
-        uses: actions/upload-artifact@v4
-        with:
-          name: ps3-build
-          path: |
-            *.pkg
-            *.elf
+    - name: Build App
+      run: |
+        export PSL1GHT=/usr/local/ps3dev
+        export PATH=$PATH:$PSL1GHT/bin
+        ppu-g++ main.cpp -o app.elf
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ps3-app
+        path: app.elf
