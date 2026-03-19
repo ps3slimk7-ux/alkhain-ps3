@@ -21,10 +21,11 @@ jobs:
 
       - name: Download PS3 toolchain
         run: |
-          wget https://github.com/ps3dev/ps3dev/archive/refs/heads/master.zip
-          unzip master.zip
-          mv ps3dev-master $HOME/ps3dev
-          rm master.zip
+          curl -L https://github.com/ps3dev/ps3dev/archive/refs/heads/main.zip -o ps3dev.zip || \
+          curl -L https://github.com/ps3dev/ps3dev/archive/refs/heads/master.zip -o ps3dev.zip
+          unzip ps3dev.zip
+          mv ps3dev-* $HOME/ps3dev
+          rm ps3dev.zip
 
       - name: Set environment
         run: |
