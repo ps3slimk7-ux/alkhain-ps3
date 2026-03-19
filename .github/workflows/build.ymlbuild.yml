@@ -1,1 +1,12 @@
+- name: Build toolchain
+  run: |
+    export PS3DEV=$HOME/ps3dev
+    export PATH=$PS3DEV/bin:$PS3DEV/ppu/bin:$PS3DEV/spu/bin:$PATH
 
+    git clone https://github.com/ps3dev/ps3toolchain.git
+    cd ps3toolchain
+
+    sudo apt update
+    sudo apt install -y libtool autoconf automake
+
+    ./toolchain.sh
