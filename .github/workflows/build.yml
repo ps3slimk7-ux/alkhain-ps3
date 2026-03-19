@@ -7,8 +7,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Using the official GitHub-hosted container for PS3 development
-    container: ghcr.io/ps3dev/ps3dev:master-ubuntu
+    # Using a highly reliable community container for PS3 development
+    container: bucanero/ps3dev:latest
 
     steps:
       - name: Checkout repository
@@ -16,7 +16,7 @@ jobs:
 
       - name: Build project
         run: |
-          # The environment, compilers, and ppu_rules are already set in this container
+          # The bucanero container has all tools and paths pre-configured
           if [ -f Makefile ]; then
             make
           else
@@ -29,3 +29,4 @@ jobs:
         with:
           name: ps3-build
           path: .
+ 
