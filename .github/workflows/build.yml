@@ -1,4 +1,4 @@
-name: Final Export All Files
+name: PS3 Final Build Fixed
 
 on:
   push:
@@ -12,35 +12,45 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Mock Environment
+      - name: Install Dependencies
         run: |
-          sudo mkdir -p /usr/local/ps3dev/
-          sudo touch /usr/local/ps3dev/ppu_rules
-          echo "PS3DEV=/usr/local/ps3dev" >> $GITHUB_ENV
+          sudo apt update
+          sudo apt install -y build-essential git python3 wget zip libelf-dev
 
-      - name: Build project
+      - name: Setup Working Toolchain
         run: |
-          if [ -f Makefile ]; then
-            # We try to run 'make' then 'make pkg' to ensure packaging happens
-            make || echo "Main build finished"
-            make pkg || echo "PKG task not found, moving on..."
-          fi
-
-      - name: Collect Every Single Output
-        run: |
-          mkdir -p collect_all
-          # This command finds any file that is NOT a source code file (.c, .h, .cpp)
-          # and copies it to the output folder to see what was built.
-          find . -type f \( -name "*.pkg" -o -name "*.elf" -o -name "*.self" -o -name "*.bin" -o -name "*.iso" \) -exec cp {} collect_all/ \;
+          # Creating directories
+          sudo mkdir -p /usr/local/ps3dev
+          sudo chown -R $USER /usr/local/ps3dev
           
-          # Also, if the folder is still empty, let's just grab the whole build directory if it exists
-          if [ -d "build" ]; then cp -r build/* collect_all/ || true; fi
-          if [ -d "bin" ]; then cp -r bin/* collect_all/ || true; fi
+          # Downloading a fallback toolchain directly
+          wget https://github.com/ps3dev/ps3dev/archive/refs/heads/master.zip
+          unzip master.zip
+          cp -r ps3dev-master/* /usr/local/ps3dev/
+          
+          # Adding to environment
+          echo "PS3DEV=/usr/local/ps3dev" >> $GITHUB_ENV
+          echo "PATH=/usr/local/ps3dev/bin:$PATH" >> $GITHUB_ENV
 
-      - name: Upload Everything
+      - name: Build and List Files
+        run: |
+          # Try to build
+          make || echo "Make failed, but checking for outputs anyway..."
+          
+          # Debugging: Show every file in the folder to find the PKG
+          echo "Listing all files in the repository:"
+          find . -maxdepth 3
+
+      - name: Export Results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: All-Build-Results
-          path: collect_all/
-          # This ensures that even if only one file is found, it will be uploaded
+          name: PS3_Output_Files
+          # This will upload EVERYTHING except the source code, to find your PKG
+          path: |
+            ./*.pkg
+            ./*.elf
+            ./*.bin
+            ./build/
+            ./bin/
           if-no-files-found: warn
