@@ -1,15 +1,15 @@
-name: PS3 Game Build
+name: Build PS3 Game
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     container:
-  image: ghcr.io/ps3dev/ps3dev:latest 
+      image: ghcr.io/ps3dev/ps3dev:latest
 
     steps:
       - uses: actions/checkout@v4
@@ -20,9 +20,8 @@ jobs:
       - name: Create PKG
         run: make pkg
 
-      - name: Upload
+      - name: Upload PKG
         uses: actions/upload-artifact@v4
         with:
           name: ps3-game
-          path: "*.pkg"
-
+          path: *.pkg 
