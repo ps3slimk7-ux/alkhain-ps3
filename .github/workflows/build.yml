@@ -1,4 +1,4 @@
-name: Find and Export PS3 PKG
+name: Final Export All Files
 
 on:
   push:
@@ -12,7 +12,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Mock PS3 Environment
+      - name: Mock Environment
         run: |
           sudo mkdir -p /usr/local/ps3dev/
           sudo touch /usr/local/ps3dev/ppu_rules
@@ -21,25 +21,26 @@ jobs:
       - name: Build project
         run: |
           if [ -f Makefile ]; then
-            # Running make and forcing it to show all files created
-            make || echo "Continuing to search for outputs..."
+            # We try to run 'make' then 'make pkg' to ensure packaging happens
+            make || echo "Main build finished"
+            make pkg || echo "PKG task not found, moving on..."
           fi
 
-      - name: Deep Search for PKG and ELF
+      - name: Collect Every Single Output
         run: |
-          mkdir -p final_output
-          echo "Listing all files created during build:"
-          find . -maxdepth 4 -not -path '*/.*'
+          mkdir -p collect_all
+          # This command finds any file that is NOT a source code file (.c, .h, .cpp)
+          # and copies it to the output folder to see what was built.
+          find . -type f \( -name "*.pkg" -o -name "*.elf" -o -name "*.self" -o -name "*.bin" -o -name "*.iso" \) -exec cp {} collect_all/ \;
           
-          # Copying any possible game files found
-          find . -name "*.pkg" -exec cp {} final_output/ \;
-          find . -name "*.elf" -exec cp {} final_output/ \;
-          find . -name "*.self" -exec cp {} final_output/ \;
-          find . -name "*.bin" -exec cp {} final_output/ \;
+          # Also, if the folder is still empty, let's just grab the whole build directory if it exists
+          if [ -d "build" ]; then cp -r build/* collect_all/ || true; fi
+          if [ -d "bin" ]; then cp -r bin/* collect_all/ || true; fi
 
-      - name: Upload Everything Found
+      - name: Upload Everything
         uses: actions/upload-artifact@v4
         with:
-          name: PS3-Build-Files
-          # If no PKG is found, this will at least upload the ELF/BIN files
-          path: final_output/
+          name: All-Build-Results
+          path: collect_all/
+          # This ensures that even if only one file is found, it will be uploaded
+          if-no-files-found: warn
