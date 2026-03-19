@@ -2,23 +2,33 @@ name: Build PS3
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     container:
-      image: ps3dev/ps3dev
+      image: ghcr.io/ps3dev/ps3dev
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Build
-        run: make
+        run: |
+          make
 
-      - name: Upload
+      - name: Create PKG
+        run: |
+          make pkg
+
+      - name: Upload PKG
         uses: actions/upload-artifact@v4
         with:
           name: ps3-build
-          path: . 
+          path: |
+            *.pkg
+            *.elf
