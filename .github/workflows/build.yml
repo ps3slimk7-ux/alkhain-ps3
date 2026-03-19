@@ -1,4 +1,4 @@
-name: PS3 Build Ultimate
+name: PS3 Final Build Fixed
 
 on:
   push:
@@ -12,31 +12,34 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Tools
+      - name: Install System Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential git wget python3 libelf-dev \
+          sudo apt-get install -y build-essential wget python3 libelf-dev \
           pkg-config zlib1g-dev libncurses5-dev autoconf automake \
           bison flex libtool patch texinfo
 
-      - name: Setup PS3 Environment
+      - name: Download Toolchain Rules
         run: |
           sudo mkdir -p /usr/local/ps3dev
           sudo chown -R $USER /usr/local/ps3dev
-          git clone --depth 1 https://github.com/ps3dev/ps3dev.git ps3dev_base
-          cp -r ps3dev_base/* /usr/local/ps3dev/
+          # Downloading rules directly to avoid Git login errors
+          wget https://github.com/ps3dev/ps3dev/archive/refs/heads/master.tar.gz
+          tar -xzf master.tar.gz
+          cp -r ps3dev-master/* /usr/local/ps3dev/
+          
           echo "PS3DEV=/usr/local/ps3dev" >> $GITHUB_ENV
           echo "PATH=/usr/local/ps3dev/bin:/usr/local/ps3dev/ppu/bin:$PATH" >> $GITHUB_ENV
 
-      - name: Execute Build
+      - name: Build Game PKG
         run: |
           export PS3DEV=/usr/local/ps3dev
           export PATH=$PS3DEV/bin:$PS3DEV/ppu/bin:$PATH
           make clean
           make
 
-      - name: Upload PKG
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PS3-Final-Game
+          name: PS3-Game-Package
           path: "*.pkg"
