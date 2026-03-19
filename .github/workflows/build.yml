@@ -1,4 +1,4 @@
-name: PS3 Final Build Fixed
+name: PS3 Build Ultimate
 
 on:
   push:
@@ -7,50 +7,33 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container: ghcr.io/ps3dev/ps3dev:latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
+      - name: Build and Package
         run: |
-          sudo apt update
-          sudo apt install -y build-essential git python3 wget zip libelf-dev
-
-      - name: Setup Working Toolchain
-        run: |
-          # Creating directories
-          sudo mkdir -p /usr/local/ps3dev
-          sudo chown -R $USER /usr/local/ps3dev
+          export PS3DEV=/usr/local/ps3dev
+          export PSL1GHT=$PS3DEV/ppu
+          export PATH=$PATH:$PS3DEV/bin:$PS3DEV/ppu/bin:$PS3DEV/spu/bin
           
-          # Downloading a fallback toolchain directly
-          wget https://github.com/ps3dev/ps3dev/archive/refs/heads/master.zip
-          unzip master.zip
-          cp -r ps3dev-master/* /usr/local/ps3dev/
+          make clean || true
+          make
           
-          # Adding to environment
-          echo "PS3DEV=/usr/local/ps3dev" >> $GITHUB_ENV
-          echo "PATH=/usr/local/ps3dev/bin:$PATH" >> $GITHUB_ENV
+          # Force packaging if the Makefile has a pkg rule
+          if [ ! -f *.pkg ]; then
+            make pkg || echo "No pkg rule found, searching for elf files..."
+          fi
 
-      - name: Build and List Files
-        run: |
-          # Try to build
-          make || echo "Make failed, but checking for outputs anyway..."
-          
-          # Debugging: Show every file in the folder to find the PKG
-          echo "Listing all files in the repository:"
-          find . -maxdepth 3
-
-      - name: Export Results
-        if: always()
+      - name: Archive Results
         uses: actions/upload-artifact@v4
         with:
-          name: PS3_Output_Files
-          # This will upload EVERYTHING except the source code, to find your PKG
+          name: PS3-Project-Output
           path: |
-            ./*.pkg
-            ./*.elf
-            ./*.bin
-            ./build/
-            ./bin/
-          if-no-files-found: warn
+            **/*.pkg
+            **/*.elf
+            **/*.self
+            **/*.bin
+          if-no-files-found: error
