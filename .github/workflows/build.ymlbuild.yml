@@ -19,9 +19,10 @@ jobs:
             build-essential git wget python3 \
             libelf-dev pkg-config
 
-      - name: Download prebuilt PS3 toolchain
+      - name: Download PS3 toolchain
         run: |
-          git clone https://github.com/ps3dev/ps3dev.git $HOME/ps3dev
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git clone --depth 1 https://github.com/ps3dev/ps3dev.git $HOME/ps3dev
 
       - name: Set environment
         run: |
@@ -30,7 +31,12 @@ jobs:
 
       - name: Build project
         run: |
-          make
+          if [ -f Makefile ]; then
+            make
+          else
+            echo "Error: Makefile not found!"
+            exit 1
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
