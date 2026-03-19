@@ -7,31 +7,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container: ps3dev/ps3dev:latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y \
-            build-essential git wget python3 \
-            libelf-dev pkg-config zlib1g-dev libncurses5-dev
-
-      - name: Download PS3 toolchain
-        run: |
-          # Downloading the toolchain directly to avoid Git authentication issues
-          wget https://github.com/ps3dev/ps3toolchain/archive/refs/heads/master.tar.gz
-          tar -xzf master.tar.gz
-          mv ps3toolchain-master $HOME/ps3dev
-          rm master.tar.gz
-
-      - name: Set environment
-        run: |
-          echo "PS3DEV=$HOME/ps3dev" >> $GITHUB_ENV
-          echo "PS3SDK=$HOME/ps3dev/portlibs/ppu" >> $GITHUB_ENV
-          echo "PATH=$HOME/ps3dev/bin:$HOME/ps3dev/ppu/bin:$HOME/ps3dev/spu/bin:$PATH" >> $GITHUB_ENV
 
       - name: Build project
         run: |
