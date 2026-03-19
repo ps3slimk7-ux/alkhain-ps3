@@ -7,48 +7,27 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # This is the official, stable container provided by the ps3dev team
+    container: ghcr.io/ps3dev/ps3dev:latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install system dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y \
-            build-essential git wget python3 \
-            libelf-dev pkg-config zlib1g-dev libncurses5-dev \
-            autoconf automake bison flex libtool patch
-
-      - name: Setup PS3Dev Environment
-        run: |
-          # Manually creating the directory and downloading the basic ruleset
-          sudo mkdir -p /usr/local/ps3dev
-          sudo chown -R $USER /usr/local/ps3dev
-          
-          # Cloning the ps3dev repo to get the 'ppu_rules' and other essentials
-          git clone --depth 1 https://github.com/ps3dev/ps3dev.git ps3dev_files
-          cp -r ps3dev_files/* /usr/local/ps3dev/
-          
-          # Setting the environment variables permanently for this job
-          echo "PS3DEV=/usr/local/ps3dev" >> $GITHUB_ENV
-          echo "PATH=/usr/local/ps3dev/bin:/usr/local/ps3dev/ppu/bin:/usr/local/ps3dev/spu/bin:$PATH" >> $GITHUB_ENV
-
       - name: Build project
         run: |
-          # Re-exporting for the current shell to ensure 'make' sees them
-          export PS3DEV=/usr/local/ps3dev
-          export PATH=$PS3DEV/bin:$PS3DEV/ppu/bin:$PS3DEV/spu/bin:$PATH
-          
+          # The environment is already pre-configured in this container
+          # We just need to trigger the make command
           if [ -f Makefile ]; then
             make
           else
-            echo "Error: Makefile not found!"
+            echo "Error: Makefile not found in the repository root!"
             exit 1
           fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ps3-build
+          name: ps3-build-output
+          # This captures everything created during the build
           path: .
