@@ -17,12 +17,14 @@ jobs:
           sudo apt update
           sudo apt install -y \
             build-essential git wget python3 \
-            libelf-dev pkg-config
+            libelf-dev pkg-config unzip
 
       - name: Download PS3 toolchain
         run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git clone --depth 1 https://github.com/ps3dev/ps3dev.git $HOME/ps3dev
+          wget https://github.com/ps3dev/ps3dev/archive/refs/heads/master.zip
+          unzip master.zip
+          mv ps3dev-master $HOME/ps3dev
+          rm master.zip
 
       - name: Set environment
         run: |
