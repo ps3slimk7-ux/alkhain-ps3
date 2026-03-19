@@ -1,1 +1,28 @@
+name: PS3 Game Build
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    container:
+      image: ps3dev/ps3dev:latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ELF
+        run: make
+
+      - name: Create PKG
+        run: make pkg
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ps3-game
+          path: "*.pkg"
 
