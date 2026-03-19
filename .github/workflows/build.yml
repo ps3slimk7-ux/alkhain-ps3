@@ -17,8 +17,9 @@ jobs:
           sudo apt update
           sudo apt install -y \
             build-essential git wget python3 \
-            libelf-dev libtool autoconf automake \
-            pkg-config bison flex texinfo
+            libelf-dev libtool libtool-bin \
+            autoconf automake pkg-config \
+            bison flex texinfo
 
       - name: Set PS3DEV environment
         run: |
@@ -32,6 +33,7 @@ jobs:
       - name: Build toolchain
         run: |
           cd ps3toolchain
+          chmod +x toolchain.sh
           ./toolchain.sh
 
       - name: Build project
