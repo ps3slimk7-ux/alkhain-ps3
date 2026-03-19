@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout project repository
         uses: actions/checkout@v4
 
       - name: Install dependencies
@@ -17,15 +17,18 @@ jobs:
           sudo apt update
           sudo apt install -y \
             build-essential git wget python3 \
-            libelf-dev pkg-config unzip
+            libelf-dev pkg-config
 
       - name: Download PS3 toolchain
+        uses: actions/checkout@v4
+        with:
+          repository: ps3dev/ps3dev
+          path: ps3dev-temp
+          # This clones the external repo safely
+
+      - name: Set up toolchain directory
         run: |
-          curl -L https://github.com/ps3dev/ps3dev/archive/refs/heads/main.zip -o ps3dev.zip || \
-          curl -L https://github.com/ps3dev/ps3dev/archive/refs/heads/master.zip -o ps3dev.zip
-          unzip ps3dev.zip
-          mv ps3dev-* $HOME/ps3dev
-          rm ps3dev.zip
+          mv ps3dev-temp $HOME/ps3dev
 
       - name: Set environment
         run: |
