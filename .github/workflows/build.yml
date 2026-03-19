@@ -20,15 +20,9 @@ jobs:
             libelf-dev pkg-config
 
       - name: Download PS3 toolchain
-        uses: actions/checkout@v4
-        with:
-          repository: ps3dev/ps3dev
-          path: ps3dev-temp
-          # This clones the external repo safely
-
-      - name: Set up toolchain directory
         run: |
-          mv ps3dev-temp $HOME/ps3dev
+          # Using git with an empty credential helper to avoid the username prompt
+          git -c "credential.helper=" clone --depth 1 https://github.com/ps3dev/ps3dev.git $HOME/ps3dev
 
       - name: Set environment
         run: |
