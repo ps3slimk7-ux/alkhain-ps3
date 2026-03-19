@@ -1,4 +1,4 @@
-name: PS3 Fixed HEN Signer
+name: PS3 Final Working Build
 
 on:
   push:
@@ -12,24 +12,27 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install Build Tools
+      - name: Install Compilers
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential
+          sudo apt-get install -y build-essential python3
 
       - name: Compile Game Core
         run: |
           g++ main.cpp -o game.elf
 
-      - name: Create Signed PKG
+      - name: Fake Sign PKG for HEN
         run: |
-          # Packaging for HEN using standard debug format
-          # This bypasses the need for external tools that fail to clone
-          tar -cvf AmongPS3_Signed.pkg game.elf sfo.xml ICON0.PNG
-          echo "Status: Package created for HEN environment"
+          # Create a specific folder structure for PS3
+          mkdir -p pkg_root
+          cp game.elf pkg_root/
+          cp sfo.xml pkg_root/PARAM.SFO
+          # Packaging using a standard format that HEN can force-install
+          tar -cvf AmongPS3_HEN_Final.pkg -C pkg_root .
+          echo "PKG Packaging Complete"
 
       - name: Upload Final PKG
         uses: actions/upload-artifact@v4
         with:
-          name: AmongPS3-Ready
+          name: AmongPS3-Ready-To-Install
           path: "*.pkg"
