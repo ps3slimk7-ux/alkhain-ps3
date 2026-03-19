@@ -27,13 +27,8 @@ jobs:
           automake \
           pkg-config \
           bison \
-          flex
-
-    - name: Fix libtool (important)
-      run: |
-        libtoolize --force
-        aclocal
-        autoconf
+          flex \
+          texinfo
 
     - name: Clone PS3 Toolchain
       run: |
