@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: ps3dev/ps3dev:latest
+    container: ps3dev/ps3dev:master-ubuntu
 
     steps:
       - name: Checkout repository
@@ -27,3 +27,4 @@ jobs:
         with:
           name: ps3-build
           path: .
+ 
