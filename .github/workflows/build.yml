@@ -3,32 +3,37 @@ name: Build PS3
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    container:
-      image: ghcr.io/ps3dev/ps3dev
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install PS3 Toolchain
+        run: |
+          sudo apt update
+          sudo apt install -y wget git build-essential
+          git clone https://github.com/ps3dev/ps3toolchain.git
+          cd ps3toolchain
+          sudo ./toolchain.sh
+
       - name: Build
         run: |
+          export PATH=$PATH:/usr/local/ps3dev/bin
           make
 
       - name: Create PKG
         run: |
+          export PATH=$PATH:/usr/local/ps3dev/bin
           make pkg
 
-      - name: Upload PKG
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: ps3-build
           path: |
             *.pkg
-            *.elf
+            *.elf 
