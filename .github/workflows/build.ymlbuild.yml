@@ -1,12 +1,39 @@
-- name: Build toolchain
-  run: |
-    export PS3DEV=$HOME/ps3dev
-    export PATH=$PS3DEV/bin:$PS3DEV/ppu/bin:$PS3DEV/spu/bin:$PATH
+name: Build PS3
 
-    git clone https://github.com/ps3dev/ps3toolchain.git
-    cd ps3toolchain
+on:
+  push:
+  workflow_dispatch:
 
-    sudo apt update
-    sudo apt install -y libtool autoconf automake
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-    ./toolchain.sh
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            build-essential git wget python3 \
+            libelf-dev pkg-config
+
+      - name: Download prebuilt PS3 toolchain
+        run: |
+          git clone https://github.com/ps3dev/ps3dev.git $HOME/ps3dev
+
+      - name: Set environment
+        run: |
+          echo "PS3DEV=$HOME/ps3dev" >> $GITHUB_ENV
+          echo "PATH=$HOME/ps3dev/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Build project
+        run: |
+          make
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ps3-build
+          path: .
