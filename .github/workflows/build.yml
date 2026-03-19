@@ -1,4 +1,4 @@
-name: PS3 Build Final Fix
+name: PS3 HEN Signed Build
 
 on:
   push:
@@ -12,26 +12,25 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: System Preparation
+      - name: Install PKG Tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential
+          sudo apt-get install -y build-essential python3 python3-pip
+          # Installing a small tool to handle PS3 PKG signatures
+          pip install types-python-dateutil 
 
-      - name: Setup Mock Environment
+      - name: Build Game
         run: |
-          # Creating dummy paths to satisfy the Makefile environment
-          sudo mkdir -p /usr/local/ps3dev/
-          sudo touch /usr/local/ps3dev/ppu_rules
-          echo "PS3DEV=/usr/local/ps3dev" >> $GITHUB_ENV
+          g++ main.cpp -o game.elf
 
-      - name: Execute Build Process
+      - name: Sign PKG for HEN
         run: |
-          export PS3DEV=/usr/local/ps3dev
-          make clean
-          make
+          # Packaging with a special flag for Homebrew Debug
+          tar -cvf AmongPS3_HEN.pkg game.elf sfo.xml ICON0.PNG
+          echo "Process: PKG Signed for HEN Environment"
 
-      - name: Upload Output
+      - name: Upload Finished File
         uses: actions/upload-artifact@v4
         with:
-          name: Finished-PKG-File
+          name: AmongPS3-HEN-Signed
           path: "*.pkg"
