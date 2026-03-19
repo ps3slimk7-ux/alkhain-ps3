@@ -6,34 +6,37 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    container: ghcr.io/ps3dev/ps3dev:latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build and Package
+      - name: Install Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git wget python3 libelf-dev \
+          pkg-config zlib1g-dev libncurses5-dev autoconf automake \
+          bison flex libtool patch texinfo
+
+      - name: Setup PS3 Environment
+        run: |
+          sudo mkdir -p /usr/local/ps3dev
+          sudo chown -R $USER /usr/local/ps3dev
+          git clone --depth 1 https://github.com/ps3dev/ps3dev.git ps3dev_base
+          cp -r ps3dev_base/* /usr/local/ps3dev/
+          echo "PS3DEV=/usr/local/ps3dev" >> $GITHUB_ENV
+          echo "PATH=/usr/local/ps3dev/bin:/usr/local/ps3dev/ppu/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Execute Build
         run: |
           export PS3DEV=/usr/local/ps3dev
-          export PSL1GHT=$PS3DEV/ppu
-          export PATH=$PATH:$PS3DEV/bin:$PS3DEV/ppu/bin:$PS3DEV/spu/bin
-          
-          make clean || true
+          export PATH=$PS3DEV/bin:$PS3DEV/ppu/bin:$PATH
+          make clean
           make
-          
-          # Force packaging if the Makefile has a pkg rule
-          if [ ! -f *.pkg ]; then
-            make pkg || echo "No pkg rule found, searching for elf files..."
-          fi
 
-      - name: Archive Results
+      - name: Upload PKG
         uses: actions/upload-artifact@v4
         with:
-          name: PS3-Project-Output
-          path: |
-            **/*.pkg
-            **/*.elf
-            **/*.self
-            **/*.bin
-          if-no-files-found: error
+          name: PS3-Final-Game
+          path: "*.pkg"
