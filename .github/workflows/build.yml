@@ -1,27 +1,24 @@
-name: Build PS3 Game
+name: Build PS3
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    container:
-      image: ghcr.io/ps3dev/ps3dev:latest
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build ELF
-        run: make
+      - name: Install tools
+        run: sudo apt update && sudo apt install -y build-essential
 
-      - name: Create PKG
-        run: make pkg
+      - name: Build
+        run: g++ main.cpp -o app
 
-      - name: Upload PKG
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: ps3-game
-          path: *.pkg 
+          name: app
+          path: app 
